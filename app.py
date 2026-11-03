@@ -202,7 +202,7 @@ with row1_col2:
 
 st.markdown("---")
 
-# Baris Grafik 2: Diagram Pai dengan Persentase di dalam Lingkaran (Diatur Jaraknya agar tidak menumpuk)
+# Baris Grafik 2: Diagram Pai Profesional (Persentase besar di dalam, persentase kecil di legenda)
 col_pie1, col_pie2, col_pie3 = st.columns([1, 2, 1])
 with col_pie2:
   st.subheader("💳 Proporsi Metode Pembayaran")
@@ -210,29 +210,38 @@ with col_pie2:
     pay_counts = df_filtered['Kategori_Pembayaran'].value_counts()
     fig, ax = plt.subplots(figsize=(6, 5))
 
-    # Fungsi kustom agar persentase kecil (seperti Lainnya/ungu) tetap tampil rapi tanpa bertumpuk
-    def custom_autopct(pct):
-      return f"{pct:.1f}%" if pct > 1.5 else f"{pct:.1f}%"
+    total_sum = pay_counts.sum()
+
+
+    # Hanya menampilkan persentase di dalam diagram jika nilainya di atas 2% agar tidak numpuk
+    def smart_autopct(pct):
+      return f"{pct:.1f}%" if pct >= 2.0 else ""
+
 
     wedges, texts, autotexts = ax.pie(
         pay_counts,
-        autopct=custom_autopct,
+        autopct=smart_autopct,
         startangle=90,
-        pctdistance=0.75,  # Mengatur posisi angka agar pas di dalam irisan
+        pctdistance=0.65,
         colors=['#63B3ED', '#4FD1C5', '#F6AD55', '#B794F4'],
         wedgeprops=dict(edgecolor='white', linewidth=1.5),
     )
 
-    # Mengatur warna dan ketebalan teks persentase agar jelas terbaca
     for autotext in autotexts:
       autotext.set_color('#1A202C')
-      autotext.set_fontsize(9)
+      autotext.set_fontsize(10)
       autotext.set_weight('bold')
+
+    # Menampilkan rincian nama, jumlah transaksi, dan persentase lengkap di legenda sebelah kanan
+    legend_labels = [
+        f"{label}: {val} ({val/total_sum*100:.1f}%)"
+        for label, val in zip(pay_counts.index, pay_counts.values)
+    ]
 
     ax.legend(
         wedges,
-        pay_counts.index,
-        title="Metode Pembayaran",
+        legend_labels,
+        title="Keterangan & Persentase",
         loc="center left",
         bbox_to_anchor=(1, 0, 0.5, 1),
         fontsize=10,
