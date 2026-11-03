@@ -202,35 +202,40 @@ with row1_col2:
 
 st.markdown("---")
 
-# Baris Grafik 2: Diagram Pai (Full Pie Chart) dengan Teks Hitam & Jelas
+# Baris Grafik 2: Diagram Pai dengan Legenda Keterangan + Persentase agar Terbaca Jelas
 col_pie1, col_pie2, col_pie3 = st.columns([1, 2, 1])
 with col_pie2:
   st.subheader("💳 Proporsi Metode Pembayaran")
   if not df_filtered.empty:
     pay_counts = df_filtered['Kategori_Pembayaran'].value_counts()
-    fig, ax = plt.subplots(figsize=(5, 5))
+    fig, ax = plt.subplots(figsize=(6, 5))
 
-    wedges, texts, autotexts = ax.pie(
+    # Menggunakan autopct dengan format khusus dan menyembunyikan teks di dalam irisan kecil
+    # agar tidak menumpuk, lalu menampilkannya lengkap di legenda
+    total_sum = pay_counts.sum()
+
+    wedges, texts = ax.pie(
         pay_counts,
-        autopct="%1.1f%%",
         startangle=90,
         colors=['#63B3ED', '#4FD1C5', '#F6AD55', '#B794F4'],
         wedgeprops=dict(edgecolor='white', linewidth=1.5),
     )
 
-    # Mengatur teks persentase agar berwarna hitam dan tebal agar sangat mudah dibaca
-    for autotext in autotexts:
-      autotext.set_color('#1A202C')
-      autotext.set_fontsize(10)
-      autotext.set_weight('bold')
+    # Membuat label legenda yang mencakup nama kategori beserta persentase pastinya
+    legend_labels = [
+        f"{label}: {val} ({val/total_sum*100:.1f}%)"
+        for label, val in zip(pay_counts.index, pay_counts.values)
+    ]
 
     ax.legend(
         wedges,
-        pay_counts.index,
-        title="Metode Pembayaran",
+        legend_labels,
+        title="Keterangan & Persentase",
         loc="center left",
         bbox_to_anchor=(1, 0, 0.5, 1),
+        fontsize=10,
     )
+
     ax.set_title(
         "Distribusi Transaksi",
         fontsize=11,
