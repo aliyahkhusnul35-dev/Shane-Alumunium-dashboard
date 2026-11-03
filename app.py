@@ -13,8 +13,9 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-        .main-header { font-size: 26px; font-weight: bold; color: #1E3A8A; }
+        .main-header { font-size: 28px; font-weight: bold; color: #1E3A8A; }
         .sub-header { font-size: 16px; color: #4B5563; }
+        .metric-card { background-color: #F8FAFC; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -64,32 +65,30 @@ def load_and_preprocess_data():
 df = load_and_preprocess_data()
 
 # ==========================================
-# FILTER DASHBOARD (DROPDOWN RAPI & BERSIH)
+# PANEL KONTROL (SIDEBAR)
 # ==========================================
-st.sidebar.title("Filter Dashboard")
+st.sidebar.title("🔍 Filter Dashboard")
 st.sidebar.markdown("---")
 
-# 1. Filter Bulan (Label diubah menjadi "Pilih Periode Bulan")
+# 1. Filter Bulan
 bulan_list = sorted(df['Bulan'].unique())
 bulan_options = ["Semua Bulan"] + bulan_list
 selected_bulan_dropdown = st.sidebar.selectbox(
     "Pilih Periode Bulan", options=bulan_options
 )
 
-# Logika Filter Bulan
 if selected_bulan_dropdown == "Semua Bulan":
   df_filtered_bulan = df
 else:
   df_filtered_bulan = df[df['Bulan'] == selected_bulan_dropdown]
 
-# 2. Filter Metode Pembayaran (Menggunakan Selectbox dengan opsi "Semua Metode Pembayaran")
+# 2. Filter Metode Pembayaran
 pembayaran_list = sorted(df['Kategori_Pembayaran'].unique())
 pembayaran_options = ["Semua Metode Pembayaran"] + pembayaran_list
 selected_pembayaran_dropdown = st.sidebar.selectbox(
     "Metode Pembayaran", options=pembayaran_options
 )
 
-# Logika Filter Pembayaran
 if selected_pembayaran_dropdown == "Semua Metode Pembayaran":
   df_filtered = df_filtered_bulan
 else:
@@ -97,9 +96,20 @@ else:
       df_filtered_bulan['Kategori_Pembayaran'] == selected_pembayaran_dropdown
   ]
 
-# Info jumlah data terpilih di sidebar
+# 3. FITUR BARU: Pencarian Toko / Pelanggan Interaktif
 st.sidebar.markdown("---")
-st.sidebar.markdown(f"**Jumlah Transaksi Terpilih:** {len(df_filtered):,} baris")
+st.sidebar.markdown("🏪 **Pencarian Toko**")
+search_toko = st.sidebar.text_input(
+    "Cari Nama Toko / Pelanggan:", placeholder="Contoh: Barokah"
+)
+
+if search_toko:
+  df_filtered = df_filtered[
+      df_filtered['Pelanggan_Clean'].str.contains(search_toko.upper(), na=False)
+  ]
+
+st.sidebar.markdown("---")
+st.sidebar.markdown(f"**Total Data Terpilih:** {len(df_filtered):,} baris")
 
 
 # ==========================================
@@ -112,26 +122,28 @@ st.markdown(
 )
 st.markdown(
     '<p class="sub-header">Sistem Business Intelligence untuk Pemantauan'
-    " Performa Penjualan dan Perilaku Pelanggan</p>",
+    " Performa Penjualan dan Perilaku Pelanggan (CRISP-DM Framework)</p>",
     unsafe_allow_html=True,
 )
 st.markdown("---")
 
-# KPI Kartu Ringkasan
+# KPI Kartu Ringkasan (Ditambah rata-rata nilai transaksi)
 total_penjualan = df_filtered['Jumlah'].sum()
 total_unit = df_filtered['Total Unit'].sum()
 total_transaksi = len(df_filtered)
-total_pelanggan = df_filtered['Pelanggan_Clean'].nunique()
+avg_transaksi = (
+    total_penjualan / total_transaksi if total_transaksi > 0 else 0
+)
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Nilai Penjualan", f"Rp {total_penjualan:,.0f}")
-col2.metric("Total Unit Terjual", f"{int(total_unit):,} Unit")
-col3.metric("Jumlah Transaksi", f"{total_transaksi:,} Transaksi")
-col4.metric("Total Pelanggan Aktif", f"{total_pelanggan:,} Toko")
+col1.metric("💰 Total Penjualan", f"Rp {total_penjualan:,.0f}")
+col2.metric("📦 Total Unit Terjual", f"{int(total_unit):,} Unit")
+col3.metric("📋 Jumlah Transaksi", f"{total_transaksi:,} Transaksi")
+col4.metric("📈 Rata-rata / Transaksi", f"Rp {avg_transaksi:,.0f}")
 
 st.markdown("---")
 
-# Grafik Analisis
+# Baris Grafik 1: Tren Penjualan & Produk
 row1_col1, row1_col2 = st.columns(2)
 with row1_col1:
   st.subheader("📈 Tren Penjualan Bulanan")
@@ -143,7 +155,7 @@ with row1_col1:
         trend_data["Jumlah"] / 1e6,
         marker="o",
         color="#2563EB",
-        linewidth=2,
+        linewidth=2.5,
     )
     ax.set_title("Total Penjualan per Bulan (Juta IDR)")
     ax.set_xlabel("Bulan")
@@ -177,6 +189,27 @@ with row1_col2:
     st.warning("Data tidak ditemukan.")
 
 st.markdown("---")
+
+# Baris Grafik 2 (FITUR BARU): Distribusi Metode Pembayaran (Pie Chart)
+st.subheader("💳 Proporsi Metode Pembayaran")
+if not df_filtered.empty:
+  pay_counts = df_filtered['Kategori_Pembayaran'].value_counts()
+  fig, ax = plt.subplots(figsize=(6, 3.5))
+  ax.pie(
+      pay_counts,
+      labels=pay_counts.index,
+      autopct="%1.1f%%",
+      startangle=90,
+      colors=['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
+  )
+  ax.axis("equal")
+  st.pyplot(fig)
+else:
+  st.warning("Data pembayaran tidak tersedia.")
+
+st.markdown("---")
+
+# Bagian Tabel Detail & Fitur Download CSV
 st.subheader("📋 Detail Data Transaksi Terfilter")
 if not df_filtered.empty:
   st.dataframe(
@@ -191,6 +224,15 @@ if not df_filtered.empty:
           "Kategori_Pembayaran",
       ]],
       use_container_width=True,
+  )
+
+  # FITUR BARU: Tombol Unduh Laporan CSV
+  csv_data = df_filtered.to_csv(index=False).encode('utf-8')
+  st.download_button(
+      label="📥 Unduh Data Terfilter (CSV)",
+      data=csv_data,
+      file_name="laporan_penjualan_shane_aluminium.csv",
+      mime="text/csv",
   )
 else:
   st.warning("Tidak ada data transaksi yang sesuai dengan filter.")
