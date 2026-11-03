@@ -64,16 +64,16 @@ def load_and_preprocess_data():
 df = load_and_preprocess_data()
 
 # ==========================================
-# FILTER DASHBOARD (SESUAI REFERENSI GAMBAR)
+# FILTER DASHBOARD (DROPDOWN RAPI & BERSIH)
 # ==========================================
 st.sidebar.title("Filter Dashboard")
 st.sidebar.markdown("---")
 
-# 1. Filter Bulan (Menggunakan Selectbox dengan opsi "Semua Bulan")
+# 1. Filter Bulan (Label diubah menjadi "Pilih Periode Bulan")
 bulan_list = sorted(df['Bulan'].unique())
 bulan_options = ["Semua Bulan"] + bulan_list
 selected_bulan_dropdown = st.sidebar.selectbox(
-    "Bulan Servis / Periode", options=bulan_options
+    "Pilih Periode Bulan", options=bulan_options
 )
 
 # Logika Filter Bulan
@@ -82,21 +82,22 @@ if selected_bulan_dropdown == "Semua Bulan":
 else:
   df_filtered_bulan = df[df['Bulan'] == selected_bulan_dropdown]
 
-# 2. Filter Metode Pembayaran (Menggunakan Multiselect interaktif standar)
+# 2. Filter Metode Pembayaran (Menggunakan Selectbox dengan opsi "Semua Metode Pembayaran")
 pembayaran_list = sorted(df['Kategori_Pembayaran'].unique())
-selected_pembayaran = st.sidebar.multiselect(
-    "Metode Pembayaran",
-    options=pembayaran_list,
-    default=pembayaran_list,  # Default tampil semua sesuai arahan dosen
-    placeholder="Pilih metode pembayaran...",
+pembayaran_options = ["Semua Metode Pembayaran"] + pembayaran_list
+selected_pembayaran_dropdown = st.sidebar.selectbox(
+    "Metode Pembayaran", options=pembayaran_options
 )
 
-# Filter Akhir Berdasarkan Gabungan Pilihan
-df_filtered = df_filtered_bulan[
-    df_filtered_bulan['Kategori_Pembayaran'].isin(selected_pembayaran)
-]
+# Logika Filter Pembayaran
+if selected_pembayaran_dropdown == "Semua Metode Pembayaran":
+  df_filtered = df_filtered_bulan
+else:
+  df_filtered = df_filtered_bulan[
+      df_filtered_bulan['Kategori_Pembayaran'] == selected_pembayaran_dropdown
+  ]
 
-# Info jumlah data terpilih
+# Info jumlah data terpilih di sidebar
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"**Jumlah Transaksi Terpilih:** {len(df_filtered):,} baris")
 
