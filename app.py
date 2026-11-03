@@ -11,11 +11,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Styling CSS untuk tampilan UI yang lebih profesional & clean
 st.markdown("""
     <style>
         .main-header { font-size: 28px; font-weight: bold; color: #1E3A8A; }
         .sub-header { font-size: 16px; color: #4B5563; }
-        .metric-card { background-color: #F8FAFC; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -96,7 +96,7 @@ else:
       df_filtered_bulan['Kategori_Pembayaran'] == selected_pembayaran_dropdown
   ]
 
-# 3. FITUR BARU: Pencarian Toko / Pelanggan Interaktif
+# 3. Pencarian Toko Interaktif
 st.sidebar.markdown("---")
 st.sidebar.markdown("🏪 **Pencarian Toko**")
 search_toko = st.sidebar.text_input(
@@ -127,7 +127,7 @@ st.markdown(
 )
 st.markdown("---")
 
-# KPI Kartu Ringkasan (Ditambah rata-rata nilai transaksi)
+# KPI Kartu Ringkasan
 total_penjualan = df_filtered['Jumlah'].sum()
 total_unit = df_filtered['Total Unit'].sum()
 total_transaksi = len(df_filtered)
@@ -143,23 +143,32 @@ col4.metric("📈 Rata-rata / Transaksi", f"Rp {avg_transaksi:,.0f}")
 
 st.markdown("---")
 
-# Baris Grafik 1: Tren Penjualan & Produk
+# Palet Warna Artistik & Profesional (Soft Corporate Theme)
+colors_palette = ['#4A90E2', '#50E3C2', '#F5A623', '#9013FE', '#B8E986']
+
+# Baris Grafik 1: Tren Penjualan & Produk Rak
 row1_col1, row1_col2 = st.columns(2)
 with row1_col1:
   st.subheader("📈 Tren Penjualan Bulanan")
   if not df_filtered.empty:
     trend_data = df_filtered.groupby("Bulan")["Jumlah"].sum().reset_index()
-    fig, ax = plt.subplots(figsize=(8, 4))
+    fig, ax = plt.subplots(figsize=(7, 4))
     ax.plot(
         trend_data["Bulan"],
         trend_data["Jumlah"] / 1e6,
         marker="o",
-        color="#2563EB",
+        color="#2B6CB0",
         linewidth=2.5,
     )
-    ax.set_title("Total Penjualan per Bulan (Juta IDR)")
-    ax.set_xlabel("Bulan")
-    ax.set_ylabel("Penjualan (Juta Rp)")
+    ax.set_title(
+        "Total Penjualan per Bulan (Juta IDR)",
+        fontsize=11,
+        fontweight="bold",
+        color="#2D3748",
+    )
+    ax.set_xlabel("Bulan", color="#4A5568")
+    ax.set_ylabel("Penjualan (Juta Rp)", color="#4A5568")
+    ax.grid(True, linestyle="--", alpha=0.5)
     plt.xticks(rotation=45)
     st.pyplot(fig)
   else:
@@ -173,16 +182,22 @@ with row1_col2:
         "Rak Magic 2P": df_filtered["Model Rak Magic 2p"].sum(),
         "Rak Magic 3P": df_filtered["Model Rak Magic 3p"].sum(),
     })
-    fig, ax = plt.subplots(figsize=(8, 4))
+    fig, ax = plt.subplots(figsize=(7, 4))
     prod_data.plot(
         kind="bar",
         ax=ax,
-        color=["#0EA5E9", "#F59E0B", "#8B5CF6"],
-        edgecolor="black",
+        color=["#3182CE", "#D69E2E", "#805AD5"],
+        edgecolor="none",
     )
-    ax.set_title("Total Unit Terjual Berdasarkan Model Rak")
-    ax.set_xlabel("Model Produk")
-    ax.set_ylabel("Jumlah Unit")
+    ax.set_title(
+        "Total Unit Terjual Berdasarkan Model Rak",
+        fontsize=11,
+        fontweight="bold",
+        color="#2D3748",
+    )
+    ax.set_xlabel("Model Produk", color="#4A5568")
+    ax.set_ylabel("Jumlah Unit", color="#4A5568")
+    ax.grid(axis="y", linestyle="--", alpha=0.5)
     plt.xticks(rotation=0)
     st.pyplot(fig)
   else:
@@ -190,22 +205,44 @@ with row1_col2:
 
 st.markdown("---")
 
-# Baris Grafik 2 (FITUR BARU): Distribusi Metode Pembayaran (Pie Chart)
-st.subheader("💳 Proporsi Metode Pembayaran")
-if not df_filtered.empty:
-  pay_counts = df_filtered['Kategori_Pembayaran'].value_counts()
-  fig, ax = plt.subplots(figsize=(6, 3.5))
-  ax.pie(
-      pay_counts,
-      labels=pay_counts.index,
-      autopct="%1.1f%%",
-      startangle=90,
-      colors=['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
-  )
-  ax.axis("equal")
-  st.pyplot(fig)
-else:
-  st.warning("Data pembayaran tidak tersedia.")
+# Baris Grafik 2: Proporsi Metode Pembayaran (Ukuran Proporsional & Rapi dengan Legend)
+col_pie1, col_pie2, col_pie3 = st.columns([1, 2, 1])
+with col_pie2:
+  st.subheader("💳 Proporsi Metode Pembayaran")
+  if not df_filtered.empty:
+    pay_counts = df_filtered['Kategori_Pembayaran'].value_counts()
+    fig, ax = plt.subplots(figsize=(5, 5))
+
+    wedges, texts, autotexts = ax.pie(
+        pay_counts,
+        autopct="%1.1f%%",
+        startangle=90,
+        colors=['#3182CE', '#38B2AC', '#ED8936', '#9F7AEA'],
+        wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2),
+    )
+
+    for autotext in autotexts:
+      autotext.set_color('white')
+      autotext.set_fontsize(10)
+      autotext.set_weight('bold')
+
+    ax.legend(
+        wedges,
+        pay_counts.index,
+        title="Metode Pembayaran",
+        loc="center left",
+        bbox_to_anchor=(1, 0, 0.5, 1),
+    )
+    ax.set_title(
+        "Distribusi Transaksi",
+        fontsize=11,
+        fontweight="bold",
+        color="#2D3748",
+        pad=10,
+    )
+    st.pyplot(fig)
+  else:
+    st.warning("Data pembayaran tidak tersedia.")
 
 st.markdown("---")
 
@@ -226,7 +263,6 @@ if not df_filtered.empty:
       use_container_width=True,
   )
 
-  # FITUR BARU: Tombol Unduh Laporan CSV
   csv_data = df_filtered.to_csv(index=False).encode('utf-8')
   st.download_button(
       label="📥 Unduh Data Terfilter (CSV)",
