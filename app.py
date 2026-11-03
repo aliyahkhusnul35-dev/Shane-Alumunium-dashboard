@@ -143,9 +143,6 @@ col4.metric("📈 Rata-rata / Transaksi", f"Rp {avg_transaksi:,.0f}")
 
 st.markdown("---")
 
-# Palet Warna Artistik & Profesional (Soft Corporate Theme)
-colors_palette = ['#4A90E2', '#50E3C2', '#F5A623', '#9013FE', '#B8E986']
-
 # Baris Grafik 1: Tren Penjualan & Produk Rak
 row1_col1, row1_col2 = st.columns(2)
 with row1_col1:
@@ -205,7 +202,7 @@ with row1_col2:
 
 st.markdown("---")
 
-# Baris Grafik 2: Proporsi Metode Pembayaran (Ukuran Proporsional & Rapi dengan Legend)
+# Baris Grafik 2: Diagram Pai (Full Pie Chart) dengan Teks Hitam & Jelas
 col_pie1, col_pie2, col_pie3 = st.columns([1, 2, 1])
 with col_pie2:
   st.subheader("💳 Proporsi Metode Pembayaran")
@@ -217,12 +214,13 @@ with col_pie2:
         pay_counts,
         autopct="%1.1f%%",
         startangle=90,
-        colors=['#3182CE', '#38B2AC', '#ED8936', '#9F7AEA'],
-        wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2),
+        colors=['#63B3ED', '#4FD1C5', '#F6AD55', '#B794F4'],
+        wedgeprops=dict(edgecolor='white', linewidth=1.5),
     )
 
+    # Mengatur teks persentase agar berwarna hitam dan tebal agar sangat mudah dibaca
     for autotext in autotexts:
-      autotext.set_color('white')
+      autotext.set_color('#1A202C')
       autotext.set_fontsize(10)
       autotext.set_weight('bold')
 
