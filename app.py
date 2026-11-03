@@ -64,53 +64,42 @@ def load_and_preprocess_data():
 df = load_and_preprocess_data()
 
 # ==========================================
-# PANEL KONTROL (FILTER INTERAKTIF & BERSIH)
+# FILTER DASHBOARD (SESUAI REFERENSI GAMBAR)
 # ==========================================
-st.sidebar.title("Panel Kontrol")
+st.sidebar.title("Filter Dashboard")
 st.sidebar.markdown("---")
-st.sidebar.info(
-    "💡 **Info:** Dashboard secara *default* menampilkan **seluruh data"
-    " keseluruhan**. Gunakan filter di bawah jika ingin menyaring data"
-    " tertentu."
+
+# 1. Filter Bulan (Menggunakan Selectbox dengan opsi "Semua Bulan")
+bulan_list = sorted(df['Bulan'].unique())
+bulan_options = ["Semua Bulan"] + bulan_list
+selected_bulan_dropdown = st.sidebar.selectbox(
+    "Bulan Servis / Periode", options=bulan_options
 )
 
-with st.sidebar.expander("⚙️ Filter Data Interaktif", expanded=True):
-  # 1. FILTER BULAN MENGGUNAKAN RENTANG (SLIDER)
-  # Jauh lebih rapi daripada mencentang satu-persatu bulan yang panjang
-  bulan_list = sorted(df['Bulan'].unique())
-  st.markdown("📅 **Rentang Periode Bulan**")
-  selected_start_bulan, selected_end_bulan = st.select_slider(
-      "Pilih Rentang Bulan:",
-      options=bulan_list,
-      value=(bulan_list[0], bulan_list[-1]),
-  )
+# Logika Filter Bulan
+if selected_bulan_dropdown == "Semua Bulan":
+  df_filtered_bulan = df
+else:
+  df_filtered_bulan = df[df['Bulan'] == selected_bulan_dropdown]
 
-  st.markdown("---")
+# 2. Filter Metode Pembayaran (Menggunakan Multiselect interaktif standar)
+pembayaran_list = sorted(df['Kategori_Pembayaran'].unique())
+selected_pembayaran = st.sidebar.multiselect(
+    "Metode Pembayaran",
+    options=pembayaran_list,
+    default=pembayaran_list,  # Default tampil semua sesuai arahan dosen
+    placeholder="Pilih metode pembayaran...",
+)
 
-  # 2. FILTER METODE PEMBAYARAN MENGGUNAKAN CHECKBOX RINGKAS
-  st.markdown("💳 **Metode Pembayaran**")
-  pembayaran_list = sorted(df['Kategori_Pembayaran'].unique())
-
-  # Tombol pilih semua otomatis aktif di awal (Default tampil semua)
-  select_all_payment = st.checkbox("Pilih Semua Pembayaran", value=True)
-
-  selected_pembayaran = []
-  for p in pembayaran_list:
-    # Jika select all aktif, otomatis tercentang semua
-    if select_all_payment:
-      checked = st.checkbox(p, value=True, key=f"pay_{p}")
-    else:
-      checked = st.checkbox(p, value=False, key=f"pay_{p}")
-
-    if checked:
-      selected_pembayaran.append(p)
-
-# Filter Data Berdasarkan Pilihan Interaktif
-df_filtered = df[
-    (df['Bulan'] >= selected_start_bulan)
-    & (df['Bulan'] <= selected_end_bulan)
-    & (df['Kategori_Pembayaran'].isin(selected_pembayaran))
+# Filter Akhir Berdasarkan Gabungan Pilihan
+df_filtered = df_filtered_bulan[
+    df_filtered_bulan['Kategori_Pembayaran'].isin(selected_pembayaran)
 ]
+
+# Info jumlah data terpilih
+st.sidebar.markdown("---")
+st.sidebar.markdown(f"**Jumlah Transaksi Terpilih:** {len(df_filtered):,} baris")
+
 
 # ==========================================
 # KONTEN UTAMA DASHBOARD
@@ -161,7 +150,7 @@ with row1_col1:
     plt.xticks(rotation=45)
     st.pyplot(fig)
   else:
-    st.warning("Data tidak ditemukan untuk rentang filter tersebut.")
+    st.warning("Data tidak ditemukan.")
 
 with row1_col2:
   st.subheader("📦 Kontribusi Model Produk Rak")
@@ -184,10 +173,10 @@ with row1_col2:
     plt.xticks(rotation=0)
     st.pyplot(fig)
   else:
-    st.warning("Data tidak ditemukan untuk rentang filter tersebut.")
+    st.warning("Data tidak ditemukan.")
 
 st.markdown("---")
-st.subheader("📋 Detail Data Transaksi")
+st.subheader("📋 Detail Data Transaksi Terfilter")
 if not df_filtered.empty:
   st.dataframe(
       df_filtered[[
