@@ -127,10 +127,11 @@ st.markdown(
 )
 st.markdown("---")
 
-# KPI Kartu Ringkasan
+# KPI Kartu Ringkasan (Lengkap 4 Kotak)
 total_penjualan = df_filtered['Jumlah'].sum()
 total_unit = df_filtered['Total Unit'].sum()
 total_transaksi = len(df_filtered)
+total_pelanggan = df_filtered['Pelanggan_Clean'].nunique()
 avg_transaksi = (
     total_penjualan / total_transaksi if total_transaksi > 0 else 0
 )
@@ -139,7 +140,7 @@ col1, col2, col3, col4 = st.columns(4)
 col1.metric("💰 Total Penjualan", f"Rp {total_penjualan:,.0f}")
 col2.metric("📦 Total Unit Terjual", f"{int(total_unit):,} Unit")
 col3.metric("📋 Jumlah Transaksi", f"{total_transaksi:,} Transaksi")
-col4.metric("📈 Rata-rata / Transaksi", f"Rp {avg_transaksi:,.0f}")
+col4.metric("🏪 Pelanggan Aktif", f"{total_pelanggan:,} Toko")
 
 st.markdown("---")
 
@@ -202,18 +203,18 @@ with row1_col2:
 
 st.markdown("---")
 
-# Baris Grafik 2: Diagram Pai Profesional (Persentase besar di dalam, persentase kecil di legenda)
-col_pie1, col_pie2, col_pie3 = st.columns([1, 2, 1])
-with col_pie2:
+# Baris Grafik 2: Proporsi Metode Pembayaran (Pie Chart) & Rata-rata Nilai Transaksi (Bar Chart Baru)
+col_g1, col_g2 = st.columns(2)
+
+with col_g1:
   st.subheader("💳 Proporsi Metode Pembayaran")
   if not df_filtered.empty:
     pay_counts = df_filtered['Kategori_Pembayaran'].value_counts()
-    fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax = plt.subplots(figsize=(6, 4.5))
 
     total_sum = pay_counts.sum()
 
 
-    # Hanya menampilkan persentase di dalam diagram jika nilainya di atas 2% agar tidak numpuk
     def smart_autopct(pct):
       return f"{pct:.1f}%" if pct >= 2.0 else ""
 
@@ -229,10 +230,9 @@ with col_pie2:
 
     for autotext in autotexts:
       autotext.set_color('#1A202C')
-      autotext.set_fontsize(10)
+      autotext.set_fontsize(9)
       autotext.set_weight('bold')
 
-    # Menampilkan rincian nama, jumlah transaksi, dan persentase lengkap di legenda sebelah kanan
     legend_labels = [
         f"{label}: {val} ({val/total_sum*100:.1f}%)"
         for label, val in zip(pay_counts.index, pay_counts.values)
@@ -244,7 +244,7 @@ with col_pie2:
         title="Keterangan & Persentase",
         loc="center left",
         bbox_to_anchor=(1, 0, 0.5, 1),
-        fontsize=10,
+        fontsize=9,
     )
 
     ax.set_title(
@@ -257,6 +257,30 @@ with col_pie2:
     st.pyplot(fig)
   else:
     st.warning("Data pembayaran tidak tersedia.")
+
+with col_g2:
+  st.subheader("📊 Rata-rata Nilai Transaksi per Metode")
+  if not df_filtered.empty:
+    avg_pay_data = df_filtered.groupby('Kategori_Pembayaran')['Jumlah'].mean()
+    fig, ax = plt.subplots(figsize=(6, 4.5))
+    avg_pay_data.plot(
+        kind='barh',
+        ax=ax,
+        color=['#4FD1C5', '#63B3ED', '#B794F4', '#F6AD55'],
+        edgecolor='none',
+    )
+    ax.set_title(
+        "Rata-rata Nominal (Rp) per Metode",
+        fontsize=11,
+        fontweight="bold",
+        color="#2D3748",
+    )
+    ax.set_xlabel("Rata-rata Nilai Transaksi (Rp)", color="#4A5568")
+    ax.set_ylabel("Metode Pembayaran", color="#4A5568")
+    ax.grid(axis="x", linestyle="--", alpha=0.5)
+    st.pyplot(fig)
+  else:
+    st.warning("Data tidak tersedia.")
 
 st.markdown("---")
 
